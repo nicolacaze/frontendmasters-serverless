@@ -60,6 +60,7 @@
   }
 </style>
 
+<button class="logout">Log Out</button>
 <h1>Add a New Movie</h1>
 
 <div class="message"></div>
@@ -76,13 +77,34 @@
   <button type="submit">Add New Movie</button>
 </form>
 
+<script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
 <script>
+  function handleIdentityEvent(user) {
+    if (user && user.token) {
+      return;
+    }
+    window.location.pathname = "/login/";
+  }
+
+  window.netlifyIdentity.on("init", handleIdentityEvent);
+  window.netlifyIdentity.on("logout", handleIdentityEvent);
+  document.querySelector(".logout").addEventListener("click", e => {
+    e.preventDefault();
+    window.netlifyIdentity.logout();
+  })
+
   async function submitHandler(event) {
     event.preventDefault();
     const data = new FormData(event.target);
 
+    const { access_token } = window.netlifyIdentity.currentUser().token;
+
     const result = fetch("/.netlify/functions/add-movie", {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      },
       body: JSON.stringify({
         id: data.get("id"),
         title: data.get("title"),
